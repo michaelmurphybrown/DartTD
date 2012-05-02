@@ -2,6 +2,8 @@ package dart;
 
 import java.util.ArrayList;
 
+import dart.runner.Runner;
+
 public class Player {
 	
 //--------------------------------
@@ -15,9 +17,9 @@ public class Player {
 	private int team;
 	
 	//Player information
-	private double money,score;
+	private double money=100.0,score;
 	
-	private long time=0,dtim;
+	private long time=0;
 //--------------------------------
 //Constructors
 //--------------------------------
@@ -50,6 +52,8 @@ public class Player {
 	
 		//--------------------------------//
 	
+	public void deductMoney(double money) {this.money-=money;}
+	
 	public void tallyRunners(ArrayList<Runner> deadRunners)
 	{
 		Runner r;
@@ -61,6 +65,8 @@ public class Player {
 			
 			//Increase the player's score
 			money += r.getRewardMoney();
+			
+			System.out.println("Player money:"+money);
 		}
 	}
 	

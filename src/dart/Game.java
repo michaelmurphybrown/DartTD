@@ -2,7 +2,6 @@ package dart;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import javax.swing.SwingUtilities;
@@ -10,6 +9,9 @@ import javax.swing.SwingUtilities;
 import dart.exceptions.InvalidPathException;
 import dart.gui.GameScreen;
 import dart.network.Handler;
+import dart.runner.AttackerRunner;
+import dart.runner.Runner;
+import dart.tower.Tower;
 
 public class Game {
 
@@ -63,6 +65,10 @@ public class Game {
 	{
 	//Declare/Initialize fields	
 
+		//Abbreviation variables for convenience
+		int x,y;
+		Tower t;
+		
 		//Get number of players from the Server
 		numPlayers=2;
 		players = new Player[numPlayers];
@@ -126,8 +132,9 @@ public class Game {
 					//ii.	purchase runners
 					if(!handler.isSendingRunner().equals(Consts.RunnerType.NONE))
 					{
-//						System.out.println("Bought a runner");
+						//System.out.println("Bought a runner");
 
+						/*
 						//Create two new runners
 						Runner r1 = new Runner(64,64,players[from]);
 						Runner r2 = new Runner(64,64,players[from]);
@@ -139,26 +146,93 @@ public class Game {
 						//Add the runners to the runnerManager
 						runnerManager.addRunner(r1);
 						runnerManager.addRunner(r2);
+						*/
+						AttackerRunner ar1 = new AttackerRunner(64,64,players[from]);
+						AttackerRunner ar2 = new AttackerRunner(64,64,players[from]);
+						
+						//Have them run in either direction
+						ar1.setCheckPointMap(board.getMap( 14,64));
+						ar2.setCheckPointMap(board.getMap(114,64));
+						
+						runnerManager.addAttackerRunner(ar1);
+						runnerManager.addAttackerRunner(ar2);
+						
 						System.out.println("New Runners bought");
-
 					}
 					
 						//
 					//iii.	upgrade towers
-						//
-					//iv.	
+					if(!handler.isUpgradingTower().equals(Consts.AttrType.NONE))
+					{
+						x=handler.getTowerLocationX();
+						y=handler.getTowerLocationY();
+						t=(Tower)board.getSquare(x,y);
+						
+						//Upgrade each attribute as the ENUM dictates
+						if(handler.isUpgradingTower().equals(Consts.AttrType.ARMOR))
+						{
+							//Check to make sure that the player has enough money
+							if(players[from].getMoney() >= t.getArmorCost()  )
+							{
+								//Subtract the cost from the player
+								players[from].deductMoney(t.getArmorCost());
+								
+								//Upgrade the armor of the tower
+								t.upgradeArmor();
+							}														
+						}
+
+						if(handler.isUpgradingTower().equals(Consts.AttrType.SPEED))
+						{
+							//Check to make sure that the player has enough money
+							if(players[from].getMoney() >= t.getSpeedCost()  )
+							{
+								//Subtract the cost from the player
+								players[from].deductMoney(t.getSpeedCost());
+								
+								//Upgrade the armor of the tower
+								t.upgradeSpeed();
+							}														
+						}
+						
+						if(handler.isUpgradingTower().equals(Consts.AttrType.RANGE))
+						{
+							//Check to make sure that the player has enough money
+							if(players[from].getMoney() >= t.getRangeCost()  )
+							{
+								//Subtract the cost from the player
+								players[from].deductMoney(t.getRangeCost());
+								
+								//Upgrade the armor of the tower
+								t.upgradeRange();
+							}														
+						}
+						
+						if(handler.isUpgradingTower().equals(Consts.AttrType.DAMAGE))
+						{
+							//Check to make sure that the player has enough money
+							if(players[from].getMoney() >= t.getDamageCost()  )
+							{
+								//Subtract the cost from the player
+								players[from].deductMoney(t.getDamageCost());
+								
+								//Upgrade the armor of the tower
+								t.upgradeDamage();
+							}														
+						}
+					}
 				
 				//3. Shoot towers
 					//i.update money and runner lists accordingly.
-					
 					deadRunners = board.turretsAttackRunners(from, players[0].getTime(),runnerManager.getEnemyRunners(players[from]));
 				//4. Get money for the runners killed by this player
 					players[from].tallyRunners(deadRunners);
 					
 				//5. Move runners
 					//i.check to see if any runners get to their checkpoints
-					runnerManager.moveRunners(handler.getCurrentTime(),board);
-					//ii.execute the move operation
+					runnerManager.moveAllRunners(handler.getCurrentTime(),board);
+				//6. Have the runners attack
+					runnerManager.runnersAttackTowers(players[from],handler.getCurrentTime(),board.getAllTowers());
 				
 				//Increase the counter for the number of packets that have been received.
 				packetsReceived++;
